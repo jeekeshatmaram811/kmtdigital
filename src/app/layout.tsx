@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KMT Digital",
-  description: "Shop the latest products at KMT Digital.",
+  title: "KMT Digital — Electronics Store",
+  description: "Shop headphones, smartwatches, sunglasses, and more at KMT Digital.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,10 +26,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-background text-foreground">
         <CartProvider>
           <Header />
           <main className="flex-1">{children}</main>
+          <Footer />
         </CartProvider>
       </body>
     </html>

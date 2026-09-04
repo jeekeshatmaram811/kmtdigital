@@ -7,19 +7,24 @@ export default function Header() {
   const { totalItems } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-white/90 backdrop-blur dark:border-white/10 dark:bg-black/90">
+    <header className="sticky top-0 z-50 border-b border-border bg-surface/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          KMT Digital
+        <Link href="/" className="flex items-baseline gap-2">
+          <span className="text-lg font-bold tracking-tight text-foreground">
+            KMT Digital
+          </span>
+          <span className="hidden text-[10px] font-semibold uppercase tracking-widest text-accent sm:inline">
+            Electronics
+          </span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium">
-          <Link href="/" className="hover:opacity-70">
+        <nav className="flex items-center gap-6 text-sm font-medium text-foreground">
+          <Link href="/" className="transition hover:text-accent">
             Shop
           </Link>
-          <Link href="/cart" className="relative hover:opacity-70">
+          <Link href="/cart" className="relative transition hover:text-accent">
             Cart
             {totalItems > 0 && (
-              <span className="absolute -right-4 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black text-xs text-white dark:bg-white dark:text-black">
+              <span className="absolute -right-4 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {totalItems}
               </span>
             )}
