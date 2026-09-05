@@ -48,9 +48,20 @@ async function getLayoutData() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await getLayoutData();
+  const title = `${settings.siteName} — Electronics Store`;
+  const description = `Shop headphones, smartwatches, sunglasses, and more at ${settings.siteName}.`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
   return {
-    title: `${settings.siteName} — Electronics Store`,
-    description: `Shop headphones, smartwatches, sunglasses, and more at ${settings.siteName}.`,
+    metadataBase: new URL(baseUrl),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      siteName: settings.siteName,
+      type: "website",
+    },
   };
 }
 
