@@ -1,5 +1,7 @@
 import ProductCard from "@/components/ProductCard";
-import { products } from "@/lib/products";
+import { getPrisma } from "@/lib/db";
+
+export const revalidate = 60;
 
 const perks = [
   { icon: "🚚", label: "Free shipping over ₹999" },
@@ -8,7 +10,13 @@ const perks = [
   { icon: "↩️", label: "7-day easy returns" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const products = await getPrisma().product.findMany({
+    where: { isActive: true },
+    include: { images: { orderBy: { position: "asc" } }, category: true },
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <div>
       <section className="border-b border-border bg-gradient-to-b from-surface to-background">
@@ -48,13 +56,18 @@ export default function Home() {
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
             All Electronics
           </h2>
-          <p className="mt-2 text-muted">{products.length} products, one category, zero fuss.</p>
+          <p className="mt-2 text-muted">{products.length} products, zero fuss.</p>
         </div>
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        {products.length === 0 && (
+          <p className="py-16 text-center text-muted">
+            No products available right now — check back soon.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -2,19 +2,40 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Product } from "@/lib/products";
+import { StoreProduct } from "@/lib/types";
 import { useCart } from "@/context/CartContext";
 
-export default function AddToCartButton({ product }: { product: Product }) {
+export default function AddToCartButton({ product }: { product: StoreProduct }) {
   const { addItem } = useCart();
   const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const image = product.images[0]?.url ?? "https://placehold.co/600x600?text=No+Image";
+  const outOfStock = product.stock === 0;
+
+  function cartProduct() {
+    return {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      image,
+    };
+  }
+
   function handleAdd() {
-    addItem(product, quantity);
+    addItem(cartProduct(), quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
+  }
+
+  if (outOfStock) {
+    return (
+      <div className="rounded-md border border-border px-6 py-3 text-center font-medium text-muted">
+        Out of Stock
+      </div>
+    );
   }
 
   return (
@@ -30,7 +51,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
           </button>
           <span className="w-6 text-center text-foreground">{quantity}</span>
           <button
-            onClick={() => setQuantity((q) => q + 1)}
+            onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
             className="h-9 w-9 rounded-md border border-border text-foreground transition hover:border-accent"
           >
             +
@@ -46,7 +67,7 @@ export default function AddToCartButton({ product }: { product: Product }) {
         </button>
         <button
           onClick={() => {
-            addItem(product, quantity);
+            addItem(cartProduct(), quantity);
             router.push("/cart");
           }}
           className="rounded-md border border-border px-6 py-3 font-medium text-foreground transition hover:border-accent hover:text-accent"

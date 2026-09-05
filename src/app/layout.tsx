@@ -4,6 +4,8 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Analytics from "@/components/Analytics";
+import { getPrisma } from "@/lib/db";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,22 +17,61 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "KMT Digital — Electronics Store",
-  description: "Shop headphones, smartwatches, sunglasses, and more at KMT Digital.",
+const DEFAULT_SETTINGS = {
+  siteName: "KMT Digital",
+  logoUrl: null as string | null,
+  freeShippingThreshold: null as number | null,
+  gtmId: null as string | null,
+  ga4Id: null as string | null,
+  metaPixelId: null as string | null,
+  smartlookId: null as string | null,
+  customHeadScript: null as string | null,
+  customBodyScript: null as string | null,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+async function getLayoutData() {
+  try {
+    const prisma = getPrisma();
+    const [categories, settings] = await Promise.all([
+      prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { displayOrder: "asc" },
+        select: { name: true, slug: true },
+      }),
+      prisma.siteSettings.findUnique({ where: { id: 1 } }),
+    ]);
+    return { categories, settings: settings ?? DEFAULT_SETTINGS };
+  } catch {
+    return { categories: [], settings: DEFAULT_SETTINGS };
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { settings } = await getLayoutData();
+  return {
+    title: `${settings.siteName} — Electronics Store`,
+    description: `Shop headphones, smartwatches, sunglasses, and more at ${settings.siteName}.`,
+  };
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { categories, settings } = await getLayoutData();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <Analytics settings={settings} />
         <CartProvider>
-          <Header />
+          <Header
+            siteName={settings.siteName}
+            logoUrl={settings.logoUrl}
+            categories={categories}
+          />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <Footer settings={settings} />
         </CartProvider>
       </body>
     </html>

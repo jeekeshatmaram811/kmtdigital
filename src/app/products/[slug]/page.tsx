@@ -1,47 +1,65 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import { getProductById, products } from "@/lib/products";
+import type { Metadata } from "next";
+import { getPrisma } from "@/lib/db";
 import { formatPrice, discountPercent } from "@/lib/format";
 import AddToCartButton from "@/components/AddToCartButton";
 import StarRating from "@/components/StarRating";
+import ProductGallery from "@/components/ProductGallery";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ id: p.id }));
+export const dynamicParams = true;
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const products = await getPrisma().product.findMany({
+    where: { isActive: true },
+    select: { slug: true },
+  });
+  return products.map((p) => ({ slug: p.slug }));
+}
+
+async function getProduct(slug: string) {
+  return getPrisma().product.findUnique({
+    where: { slug },
+    include: { images: { orderBy: { position: "asc" } }, category: true },
+  });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProduct(slug);
+  if (!product) return {};
+
+  return {
+    title: product.seoTitle ?? product.name,
+    description: product.seoDescription ?? product.description,
+    openGraph: product.images[0] ? { images: [product.images[0].url] } : undefined,
+  };
 }
 
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = await params;
-  const product = getProductById(id);
+  const { slug } = await params;
+  const product = await getProduct(slug);
   if (!product) notFound();
 
-  const discount = discountPercent(product.price, product.originalPrice);
+  const discount = discountPercent(product.price, product.originalPrice ?? undefined);
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-10 md:grid-cols-2">
-      <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-surface-2">
-        {discount > 0 && (
-          <span className="absolute left-3 top-3 z-10 rounded bg-accent px-2 py-1 text-xs font-bold text-accent-foreground">
-            {discount}% OFF
-          </span>
-        )}
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          className="object-cover"
-          unoptimized
-        />
-      </div>
+      <ProductGallery images={product.images} name={product.name} discount={discount} />
       <div className="flex flex-col gap-4">
         <span className="text-xs uppercase tracking-wide text-muted">
-          {product.category}
+          {product.category.name}
         </span>
         <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
-        <StarRating rating={product.rating} reviews={product.reviews} size="md" />
+        <StarRating rating={product.rating} reviews={product.reviewCount} size="md" />
         <div className="flex items-baseline gap-3">
           <p className="text-2xl font-bold text-foreground">
             {formatPrice(product.price)}
