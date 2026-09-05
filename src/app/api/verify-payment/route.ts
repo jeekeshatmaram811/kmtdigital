@@ -26,7 +26,8 @@ export async function POST(request: Request) {
 
   let expectedSignature: string;
   try {
-    expectedSignature = createHmac("sha256", getRazorpayKeySecret())
+    const keySecret = await getRazorpayKeySecret();
+    expectedSignature = createHmac("sha256", keySecret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
   } catch {

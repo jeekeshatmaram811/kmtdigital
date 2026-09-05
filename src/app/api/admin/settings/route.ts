@@ -5,6 +5,8 @@ import { getPrisma } from "@/lib/db";
 type SettingsInput = {
   siteName?: string;
   logoUrl?: string | null;
+  razorpayKeyId?: string | null;
+  razorpayKeySecret?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   address?: string | null;

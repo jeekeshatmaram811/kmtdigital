@@ -7,6 +7,8 @@ import ImageUploader from "./ImageUploader";
 type Settings = {
   siteName: string;
   logoUrl: string | null;
+  razorpayKeyId: string | null;
+  razorpayKeySecret: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   address: string | null;
@@ -33,16 +35,19 @@ function Field({
   value,
   onChange,
   placeholder,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  type?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <label className={labelClass}>{label}</label>
       <input
+        type={type}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
@@ -56,6 +61,10 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
   const router = useRouter();
   const [siteName, setSiteName] = useState(settings.siteName);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl ?? "");
+  const [razorpayKeyId, setRazorpayKeyId] = useState(settings.razorpayKeyId ?? "");
+  const [razorpayKeySecret, setRazorpayKeySecret] = useState(
+    settings.razorpayKeySecret ?? ""
+  );
   const [contactEmail, setContactEmail] = useState(settings.contactEmail ?? "");
   const [contactPhone, setContactPhone] = useState(settings.contactPhone ?? "");
   const [address, setAddress] = useState(settings.address ?? "");
@@ -89,6 +98,8 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
     const payload = {
       siteName,
       logoUrl: logoUrl || null,
+      razorpayKeyId: razorpayKeyId || null,
+      razorpayKeySecret: razorpayKeySecret || null,
       contactEmail: contactEmail || null,
       contactPhone: contactPhone || null,
       address: address || null,
@@ -133,6 +144,41 @@ export default function SettingsForm({ settings }: { settings: Settings }) {
           <ImageUploader
             images={logoUrl ? [{ url: logoUrl }] : []}
             onChange={(images) => setLogoUrl(images[images.length - 1]?.url ?? "")}
+          />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold text-foreground">
+          Payment Gateway (Razorpay)
+        </h2>
+        <p className="text-sm text-muted">
+          Find these under your{" "}
+          <a
+            href="https://dashboard.razorpay.com/app/keys"
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent hover:underline"
+          >
+            Razorpay Dashboard → Settings → API Keys
+          </a>
+          . Test keys start with <code>rzp_test_</code>, live keys with{" "}
+          <code>rzp_live_</code>. Leave both blank to keep using the server's
+          default keys.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <Field
+            label="Razorpay Key ID"
+            value={razorpayKeyId}
+            onChange={setRazorpayKeyId}
+            placeholder="rzp_live_xxxxxxxxxxxx"
+          />
+          <Field
+            label="Razorpay Key Secret"
+            value={razorpayKeySecret}
+            onChange={setRazorpayKeySecret}
+            placeholder="Leave blank to keep current"
+            type="password"
           />
         </div>
       </section>

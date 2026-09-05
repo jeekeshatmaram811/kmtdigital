@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRazorpay } from "@/lib/razorpay";
+import { getRazorpay, getRazorpayKeyId } from "@/lib/razorpay";
 import { getPrisma } from "@/lib/db";
 
 type CreateOrderInput = {
@@ -80,7 +80,8 @@ export async function POST(request: Request) {
   const orderNumber = generateOrderNumber();
 
   try {
-    const razorpayOrder = await getRazorpay().orders.create({
+    const razorpay = await getRazorpay();
+    const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(total * 100),
       currency: "INR",
       receipt: orderNumber,
@@ -121,7 +122,7 @@ export async function POST(request: Request) {
       order_id: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
-      key_id: process.env.RAZORPAY_KEY_ID,
+      key_id: await getRazorpayKeyId(),
       orderNumber,
     });
   } catch (error) {

@@ -105,6 +105,8 @@ model SiteSettings {
   id                    Int      @id @default(1)
   siteName              String   @default("KMT Digital")
   logoUrl               String?
+  razorpayKeyId         String?
+  razorpayKeySecret     String?
   contactEmail          String?
   contactPhone          String?
   address               String?

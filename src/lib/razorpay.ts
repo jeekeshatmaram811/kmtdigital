@@ -1,26 +1,27 @@
 import Razorpay from "razorpay";
+import { getPrisma } from "@/lib/db";
 
-let razorpayInstance: Razorpay | null = null;
-
-export function getRazorpay(): Razorpay {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+async function getRazorpayCredentials(): Promise<{ keyId: string; keySecret: string }> {
+  const settings = await getPrisma().siteSettings.findUnique({ where: { id: 1 } });
+  const keyId = settings?.razorpayKeyId || process.env.RAZORPAY_KEY_ID;
+  const keySecret = settings?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
-    throw new Error("RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET must be set");
+    throw new Error("Razorpay key ID and secret must be set");
   }
 
-  if (!razorpayInstance) {
-    razorpayInstance = new Razorpay({ key_id: keyId, key_secret: keySecret });
-  }
-
-  return razorpayInstance;
+  return { keyId, keySecret };
 }
 
-export function getRazorpayKeySecret(): string {
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  if (!keySecret) {
-    throw new Error("RAZORPAY_KEY_SECRET must be set");
-  }
-  return keySecret;
+export async function getRazorpay(): Promise<Razorpay> {
+  const { keyId, keySecret } = await getRazorpayCredentials();
+  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+}
+
+export async function getRazorpayKeyId(): Promise<string> {
+  return (await getRazorpayCredentials()).keyId;
+}
+
+export async function getRazorpayKeySecret(): Promise<string> {
+  return (await getRazorpayCredentials()).keySecret;
 }
