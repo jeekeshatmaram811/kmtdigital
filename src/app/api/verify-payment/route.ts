@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { getRazorpayKeySecret } from "@/lib/razorpay";
+import { getPrisma } from "@/lib/db";
 
 export async function POST(request: Request) {
   let body: {
@@ -48,5 +49,53 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ success: true });
+  const prisma = getPrisma();
+
+  try {
+    const order = await prisma.$transaction(async (tx) => {
+      const existing = await tx.order.findUnique({
+        where: { razorpayOrderId: razorpay_order_id },
+        include: { items: true },
+      });
+
+      if (!existing) {
+        throw new Error("ORDER_NOT_FOUND");
+      }
+
+      if (existing.status === "PAID") {
+        return existing;
+      }
+
+      for (const item of existing.items) {
+        if (item.productId) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
+      }
+
+      return tx.order.update({
+        where: { id: existing.id },
+        data: {
+          status: "PAID",
+          razorpayPaymentId: razorpay_payment_id,
+          razorpaySignature: razorpay_signature,
+        },
+      });
+    });
+
+    return NextResponse.json({ success: true, orderNumber: order.orderNumber });
+  } catch (error) {
+    if (error instanceof Error && error.message === "ORDER_NOT_FOUND") {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { success: false, error: "Could not finalize order" },
+      { status: 500 }
+    );
+  }
 }
