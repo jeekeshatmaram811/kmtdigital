@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import { slugify } from "@/lib/slugify";
@@ -33,6 +34,7 @@ export async function PATCH(
         ...(body.displayOrder !== undefined && { displayOrder: body.displayOrder }),
       },
     });
+    revalidatePath("/", "layout");
     return NextResponse.json(category);
   } catch {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
@@ -47,6 +49,7 @@ export async function DELETE(
 
   try {
     await getPrisma().category.delete({ where: { id } });
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch (error) {
     if (

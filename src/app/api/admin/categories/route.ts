@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
         displayOrder: body.displayOrder ?? 0,
       },
     });
+    revalidatePath("/", "layout");
     return NextResponse.json(category, { status: 201 });
   } catch {
     return NextResponse.json(

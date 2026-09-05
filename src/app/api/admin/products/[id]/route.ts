@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db";
 import { slugify } from "@/lib/slugify";
 
@@ -78,6 +79,7 @@ export async function PATCH(
       });
     });
 
+    revalidatePath("/", "layout");
     return NextResponse.json(product);
   } catch {
     return NextResponse.json(
@@ -95,6 +97,7 @@ export async function DELETE(
 
   try {
     await getPrisma().product.delete({ where: { id } });
+    revalidatePath("/", "layout");
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });

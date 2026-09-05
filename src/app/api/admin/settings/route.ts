@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/db";
 
 type SettingsInput = {
@@ -35,6 +36,7 @@ export async function PATCH(request: Request) {
       update: body,
       create: { id: 1, siteName: body.siteName ?? "KMT Digital", ...body },
     });
+    revalidatePath("/", "layout");
     return NextResponse.json(settings);
   } catch {
     return NextResponse.json({ error: "Could not save settings" }, { status: 400 });
