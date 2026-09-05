@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       order_id: order.id,
       amount: order.amount,
       currency: order.currency,
+      key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     const statusCode =

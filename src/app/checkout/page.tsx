@@ -9,8 +9,6 @@ import { formatPrice } from "@/lib/format";
 const inputClass =
   "rounded-md border border-border bg-surface px-4 py-3 text-foreground placeholder:text-muted focus:border-accent focus:outline-none";
 
-const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "";
-
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
@@ -61,8 +59,12 @@ export default function CheckoutPage() {
 
       const order = await orderRes.json();
 
+      if (!order.key_id) {
+        throw new Error("Payment gateway is not configured");
+      }
+
       const razorpay = new window.Razorpay({
-        key: RAZORPAY_KEY_ID,
+        key: order.key_id,
         amount: order.amount,
         currency: order.currency,
         order_id: order.order_id,
