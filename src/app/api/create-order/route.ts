@@ -43,8 +43,12 @@ export async function POST(request: Request) {
       );
     }
 
+    console.error("create-order error:", error);
     return NextResponse.json(
-      { error: "Failed to create Razorpay order" },
+      {
+        error: "Failed to create Razorpay order",
+        debug: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }
