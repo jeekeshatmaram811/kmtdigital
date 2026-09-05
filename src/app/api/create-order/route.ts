@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { razorpay } from "@/lib/razorpay";
+import { getRazorpay } from "@/lib/razorpay";
 
 export async function POST(request: Request) {
   let body: { amount?: number; currency?: string; receipt?: string };
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const order = await razorpay.orders.create({
+    const order = await getRazorpay().orders.create({
       amount: Math.round(amount),
       currency,
       receipt: receipt ?? `receipt_${Date.now()}`,

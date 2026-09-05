@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
-import { RAZORPAY_KEY_SECRET } from "@/lib/razorpay";
+import { getRazorpayKeySecret } from "@/lib/razorpay";
 
 export async function POST(request: Request) {
   let body: {
@@ -23,9 +23,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const expectedSignature = createHmac("sha256", RAZORPAY_KEY_SECRET)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest("hex");
+  let expectedSignature: string;
+  try {
+    expectedSignature = createHmac("sha256", getRazorpayKeySecret())
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+  } catch {
+    return NextResponse.json(
+      { error: "Payment verification is not configured" },
+      { status: 500 }
+    );
+  }
 
   const expected = Buffer.from(expectedSignature, "hex");
   const actual = Buffer.from(razorpay_signature, "hex");
